@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureGuard — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#050a0f;--panel:#0a1520;--panel2:#0d1e2e;--border:#0d2d45;--accent:#00d4ff;
+    --accent2:#ff3e3e;--text:#c8dce8;--muted:#4a6478;--success:#00e676;--warn:#ffb300;
+    --mono:'Share Tech Mono',monospace;--sans:'Rajdhani',sans-serif;}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding:0}
+  body::before{content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(0,212,255,.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,.02) 1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0}
+
+  /* ─ Header ─ */
+  .header{position:sticky;top:0;z-index:100;background:rgba(5,10,15,.95);
+    border-bottom:1px solid var(--border);backdrop-filter:blur(8px);
+    display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:56px}
+  .hlogo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;color:#fff;letter-spacing:.06em}
+  .hlogo-icon{width:28px;height:28px;border:1.5px solid var(--accent);display:grid;place-items:center;font-size:13px;color:var(--accent)}
+  .hbadge{font-family:var(--mono);font-size:10px;color:var(--accent2);background:rgba(255,62,62,.1);
+    border:1px solid rgba(255,62,62,.3);padding:3px 8px;letter-spacing:.1em}
+  .hlinks a{font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:none;margin-left:20px}
+  .hlinks a:hover{color:var(--accent)}
+
+  /* ─ Layout ─ */
+  .page{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:32px 24px}
+
+  /* ─ Stat cards ─ */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:32px}
+  .stat-card{background:var(--panel);border:1px solid var(--border);padding:20px 22px}
+  .stat-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
+  .stat-value{font-size:36px;font-weight:700;line-height:1}
+  .stat-value.blue{color:var(--accent)}
+  .stat-value.red{color:var(--accent2)}
+  .stat-value.green{color:var(--success)}
+  .stat-value.warn{color:var(--warn)}
+
+  /* ─ Section ─ */
+  .section{margin-bottom:28px}
+  .section-header{display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  .section-title{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+  .section-title span{color:var(--accent)}
+  .count-badge{font-family:var(--mono);font-size:10px;color:var(--bg);background:var(--accent2);
+    padding:2px 8px;border-radius:0}
+
+  /* ─ Table ─ */
+  .tbl-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse}
+  th{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;
+    padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  td{font-family:var(--mono);font-size:12px;padding:10px 12px;border-bottom:1px solid rgba(13,45,69,.5)}
+  tr:last-child td{border:none}
+  tr:hover td{background:rgba(0,212,255,.02)}
+  .badge{display:inline-block;padding:2px 8px;font-size:10px;letter-spacing:.06em;border:1px solid}
+  .badge.success{color:var(--success);border-color:rgba(0,230,118,.3);background:rgba(0,230,118,.07)}
+  .badge.failed{color:var(--accent2);border-color:rgba(255,62,62,.3);background:rgba(255,62,62,.07)}
+  .badge.blocked{color:var(--warn);border-color:rgba(255,179,0,.3);background:rgba(255,179,0,.07)}
+  .ip{color:var(--warn)}
+  .email-cell{color:var(--accent)}
+
+  /* ─ Simulate panel ─ */
+  .sim-panel{background:var(--panel);border:1px solid rgba(255,62,62,.25);padding:24px;margin-bottom:32px}
+  .sim-title{font-family:var(--mono);font-size:11px;color:var(--accent2);letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px}
+  .sim-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+  .sim-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px}
+  .sim-field label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+  .sim-field input{background:rgba(255,62,62,.04);border:1px solid rgba(255,62,62,.2);color:var(--text);
+    font-family:var(--mono);font-size:13px;padding:10px 12px;outline:none;transition:border-color .2s}
+  .sim-field input:focus{border-color:var(--accent2)}
+  .sim-btn{background:transparent;border:1px solid var(--accent2);color:var(--accent2);
+    font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    padding:10px 20px;cursor:pointer;transition:background .2s,color .2s;white-space:nowrap}
+  .sim-btn:hover{background:var(--accent2);color:#fff}
+  .sim-result{margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--success);display:none}
+  .sim-result.show{display:block}
+
+  /* ─ Bar chart ─ */
+  .bar-chart{display:flex;align-items:flex-end;gap:6px;height:80px;padding:0 4px}
+  .bar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .bar-fill{width:100%;background:var(--accent);opacity:.6;transition:height .5s ease;min-height:2px}
+  .bar-label{font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center}
+  .bar-count{font-family:var(--mono);font-size:9px;color:var(--accent)}
+
+  /* ─ Top IPs ─ */
+  .ip-list .ip-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(13,45,69,.5)}
+  .ip-list .ip-row:last-child{border:none}
+  .ip-bar-wrap{flex:1;height:6px;background:var(--border)}
+  .ip-bar-fill{height:100%;background:var(--accent2);transition:width .6s ease}
+  .ip-count{font-family:var(--mono);font-size:11px;color:var(--accent2);width:28px;text-align:right}
+
+  /* ─ Log viewer ─ */
+  .log-box{background:#020508;border:1px solid var(--border);padding:16px;
+    font-family:var(--mono);font-size:11px;color:#4a8fa0;max-height:220px;overflow-y:auto;
+    line-height:1.6}
+  .log-line.warn{color:var(--warn)}
+  .log-line.error{color:var(--accent2)}
+  .log-line.success{color:var(--success)}
+
+  /* ─ Two-col ─ */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px}
+  @media(max-width:700px){.two-col{grid-template-columns:1fr}}
+
+  /* ─ Refresh ─ */
+  .refresh-btn{font-family:var(--mono);font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);
+    padding:4px 12px;cursor:pointer;transition:color .2s,border-color .2s}
+  .refresh-btn:hover{color:var(--accent);border-color:var(--accent)}
+
+  .empty{font-family:var(--mono);font-size:12px;color:var(--muted);padding:20px;text-align:center}
+
+  /* scrollbar */
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:var(--border)}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="hlogo">
+    <div class="hlogo-icon">🛡</div>
+    SecureGuard
+    <div class="hbadge">ADMIN</div>
+  </div>
+  <div class="hlinks">
+    <a href="/login">Login Page</a>
+    <a href="/register">Register</a>
+    <a href="#" onclick="loadData()">↻ Refresh</a>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Stat Cards -->
+  <div class="stat-grid" id="statGrid">
+    <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value blue" id="s-users">—</div></div>
+    <div class="stat-card"><div class="stat-label">Total Attempts</div><div class="stat-value" id="s-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Failed Attempts</div><div class="stat-value red" id="s-failed">—</div></div>
+    <div class="stat-card"><div class="stat-label">Successful Logins</div><div class="stat-value green" id="s-success">—</div></div>
+    <div class="stat-card"><div class="stat-label">Active Blocks</div><div class="stat-value warn" id="s-blocks">—</div></div>
+  </div>
+
+  <!-- Simulate Attack -->
+  <div class="sim-panel">
+    <div class="sim-title">⚡ Attack Simulator — inject brute force attempts for testing</div>
+    <div class="sim-row">
+      <div class="sim-field">
+        <label>Target Email</label>
+        <input id="sim-email" value="victim@example.com">
+      </div>
+      <div class="sim-field">
+        <label>Fake IP</label>
+        <input id="sim-ip" value="10.0.0.99">
+      </div>
+      <div class="sim-field" style="max-width:100px">
+        <label>Count</label>
+        <input id="sim-count" type="number" value="6" min="1" max="20">
+      </div>
+      <button class="sim-btn" onclick="simulate()">Run Simulation</button>
+    </div>
+    <div class="sim-result" id="simResult"></div>
+  </div>
+
+  <!-- Activity Chart + Top IPs -->
+  <div class="two-col">
+    <div class="section" style="margin:0">
+      <div class="section-header">
+        <div class="section-title">// <span>Hourly Activity</span> (last 24h)</div>
+      </div>
+      <div class="bar-chart" id="hourlyChart"><div class="empty">Loading…</div></div>
+    </div>
+    <div class="section" style="margin:0">
+      <div class="section-header">
+        <div class="section-title">// <span>Top Attacking IPs</span></div>
+      </div>
+      <div class="ip-list" id="topIps"><div class="empty">No data yet</div></div>
+    </div>
+  </div>
+
+  <!-- Blocked Entities -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">// <span>Active Blocks</span></div>
+      <span class="count-badge" id="block-count">0</span>
+    </div>
+    <div class="tbl-wrap">
+      <table id="blockTable">
+        <thead><tr><th>Entity</th><th>Type</th><th>Blocked At</th><th>Unblocks At</th><th>Reason</th></tr></thead>
+        <tbody id="blockTbody"><tr><td colspan="5" class="empty">No active blocks</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recent Attempts -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">// <span>Recent Login Attempts</span></div>
+      <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+    </div>
+    <div class="tbl-wrap">
+      <table id="attemptsTable">
+        <thead><tr><th>Email</th><th>IP Address</th><th>Status</th><th>Reason</th><th>Timestamp</th></tr></thead>
+        <tbody id="attemptsTbody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+async function loadData() {
+  try {
+    const res = await fetch('/api/admin/stats');
+    const d = await res.json();
+    const s = d.stats;
+
+    // Stats
+    document.getElementById('s-users').textContent   = s.total_users;
+    document.getElementById('s-total').textContent   = s.total_attempts;
+    document.getElementById('s-failed').textContent  = s.failed_attempts;
+    document.getElementById('s-success').textContent = s.success_attempts;
+    document.getElementById('s-blocks').textContent  = s.active_blocks;
+
+    // Hourly chart
+    buildHourly(d.hourly_activity);
+
+    // Top IPs
+    buildTopIps(d.top_ips);
+
+    // Blocked
+    const blockTb = document.getElementById('blockTbody');
+    document.getElementById('block-count').textContent = d.blocked_list.length;
+    if (!d.blocked_list.length) {
+      blockTb.innerHTML = '<tr><td colspan="5" class="empty">No active blocks — system nominal</td></tr>';
+    } else {
+      blockTb.innerHTML = d.blocked_list.map(b => `
+        <tr>
+          <td class="${b.entity_type==='ip'?'ip':'email-cell'}">${b.entity}</td>
+          <td><span class="badge blocked">${b.entity_type.toUpperCase()}</span></td>
+          <td>${fmt(b.blocked_at)}</td>
+          <td>${fmt(b.unblock_at)}</td>
+          <td style="color:var(--muted)">${b.reason||'—'}</td>
+        </tr>`).join('');
+    }
+
+    // Attempts
+    const atTb = document.getElementById('attemptsTbody');
+    if (!d.recent_attempts.length) {
+      atTb.innerHTML = '<tr><td colspan="5" class="empty">No attempts logged yet</td></tr>';
+    } else {
+      atTb.innerHTML = d.recent_attempts.map(a => `
+        <tr>
+          <td class="email-cell">${a.email}</td>
+          <td class="ip">${a.ip_address}</td>
+          <td><span class="badge ${a.status}">${a.status.toUpperCase()}</span></td>
+          <td style="color:var(--muted);font-size:11px">${a.reason||'—'}</td>
+          <td style="color:var(--muted)">${fmt(a.timestamp)}</td>
+        </tr>`).join('');
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function buildHourly(data) {
+  const el = document.getElementById('hourlyChart');
+  if (!data || !data.length) { el.innerHTML='<div class="empty">No activity in last 24h</div>'; return; }
+  const max = Math.max(...data.map(d=>d.c), 1);
+  el.innerHTML = data.map(d=>`
+    <div class="bar-item">
+      <div class="bar-count">${d.c}</div>
+      <div class="bar-fill" style="height:${Math.max(4,(d.c/max)*68)}px"></div>
+      <div class="bar-label">${d.hour}</div>
+    </div>`).join('');
+}
+
+function buildTopIps(data) {
+  const el = document.getElementById('topIps');
+  if (!data||!data.length) { el.innerHTML='<div class="empty">No failed attempts yet</div>'; return; }
+  const max = data[0].c;
+  el.innerHTML = data.map(d=>`
+    <div class="ip-row">
+      <span class="ip" style="width:110px;font-size:11px">${d.ip_address}</span>
+      <div class="ip-bar-wrap"><div class="ip-bar-fill" style="width:${(d.c/max)*100}%"></div></div>
+      <span class="ip-count">${d.c}</span>
+    </div>`).join('');
+}
+
+function fmt(ts) {
+  if (!ts) return '—';
+  return new Date(ts+'Z').toLocaleString('en-GB',{dateStyle:'short',timeStyle:'medium'});
+}
+
+async function simulate() {
+  const email = document.getElementById('sim-email').value.trim();
+  const ip    = document.getElementById('sim-ip').value.trim();
+  const count = parseInt(document.getElementById('sim-count').value)||6;
+  const resultEl = document.getElementById('simResult');
+  try {
+    const res = await fetch('/api/simulate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({target_email:email,ip,count})});
+    const data = await res.json();
+    resultEl.textContent = '✓ ' + data.message;
+    resultEl.className = 'sim-result show';
+    setTimeout(loadData, 500);
+  } catch(e) {
+    resultEl.textContent = 'Error running simulation.';
+    resultEl.className = 'sim-result show';
+  }
+}
+
+// Auto-refresh every 10s
+loadData();
+setInterval(loadData, 10000);
+</script>
+</body>
+</html>
